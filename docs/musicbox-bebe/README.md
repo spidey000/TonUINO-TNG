@@ -22,7 +22,7 @@ La configuración definitiva de botones y el comportamiento NFC se validarán co
 
 - `HARDWARE.md`: criterios de seguridad, carcasa y montaje.
 - `BOM.csv`: lista inicial de compra con decisiones pendientes señaladas.
-- `cad/`: archivos CAD/STL se incorporarán cuando se defina el tamaño de botones y la placa.
+- `cad/musicbox-bebe/`: modelo paramétrico inicial OpenSCAD y notas de impresión; todavía requiere adaptar los soportes y agujeros al hardware seleccionado.
 - `firmware/`: configuración y cambios propios sobre TonUINO-TNG, después de crear el fork.
 
 ## Estado
@@ -30,7 +30,9 @@ La configuración definitiva de botones y el comportamiento NFC se validarán co
 - [x] Elegida una base de firmware open source para modificar.
 - [x] Definidos los requisitos principales y BOM preliminar.
 - [x] Fork creado: `spidey000/TonUINO-TNG`.
+- [x] Añadido un CAD conceptual del cubo compacto, con cuerpo, tapa, zona NFC, controles y rejilla.
 - [ ] Elegir y probar lector NFC, placa y circuito de batería.
+- [ ] Ajustar el CAD a las dimensiones reales y añadir soportes internos.
 - [ ] Prototipo de botones y carcasa.
 - [ ] Validar audio, autonomía y cierre mecánico.
 
