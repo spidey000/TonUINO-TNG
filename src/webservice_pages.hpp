@@ -12,3 +12,7 @@ extern const char system_html              [] PROGMEM;
 extern const char wifi_html                [] PROGMEM;
 extern const char info_html                [] PROGMEM;
 extern const char upgrade_html             [] PROGMEM;
+
+#ifdef MUSICBOX_BEBE
+extern const char musicbox_html[] PROGMEM;
+#endif

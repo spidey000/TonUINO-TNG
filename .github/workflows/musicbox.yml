@@ -1,0 +1,38 @@
+name: MusicBox portable firmware
+on:
+  push:
+    branches: [musicbox-bebe-v1, 'feature/portable-parent-controls']
+  pull_request:
+    branches: [musicbox-bebe-v1]
+  workflow_dispatch:
+permissions:
+  contents: read
+jobs:
+  test:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - run: sudo apt-get update && sudo apt-get install -y libgtest-dev cmake
+      - run: cmake -S . -B build && cmake --build build -j 2
+      - run: ctest --test-dir build --output-on-failure -j 2
+  firmware:
+    runs-on: ubuntu-latest
+    needs: test
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: '3.12'
+      - uses: actions/cache@v4
+        with:
+          path: ~/.platformio
+          key: musicbox-pio-${{ runner.os }}-${{ hashFiles('platformio.ini') }}
+      - run: pip install platformio==6.2.0
+      - run: pio run -e MusicBox_Bebe -e TonUINO_Esp32_W_3
+      - uses: actions/upload-artifact@v4
+        with:
+          name: MusicBox_Bebe
+          path: |
+            .pio/build/MusicBox_Bebe/firmware.bin
+            .pio/build/MusicBox_Bebe/bootloader.bin
+            .pio/build/MusicBox_Bebe/partitions.bin

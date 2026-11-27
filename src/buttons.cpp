@@ -2,6 +2,9 @@
 
 #include "constants.hpp"
 #include "logger.hpp"
+#ifdef MUSICBOX_BEBE
+#include "tonuino.hpp"
+#endif
 
 namespace {
 constexpr bool buttonPinIsActiveLow = (buttonPinType == levelType::activeLow);
@@ -33,6 +36,16 @@ void Buttons::begin() {
 commandRaw Buttons::getCommandRaw() {
   commandRaw ret = commandRaw::none;
   readButtons();
+#ifdef MUSICBOX_BEBE
+  auto& box = Tonuino::getTonuino().getMusicBox();
+  if (box.suppressFrontButtons()) {
+    if (isNoButton()) box.releaseFrontButtons();
+    ignoreAll = true;
+    ignoreRelease = true;
+    longPressFactor = 0;
+    return commandRaw::none;
+  }
+#endif
 
   if ((ignoreRelease || ignoreAll) && isNoButton()) {
     ignoreAll     = false;

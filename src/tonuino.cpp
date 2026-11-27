@@ -6,6 +6,9 @@
 #else
 #include <esp_bt.h>
 #include <esp_sleep.h>
+#ifdef MUSICBOX_BEBE
+#include <driver/rtc_io.h>
+#endif
 #include <esp_bt_main.h>
 #include <esp_wifi.h>
 #include <esp_task_wdt.h>
@@ -42,6 +45,22 @@ ISR(TIMER1_COMPA_vect){
 #endif
 
 void Tonuino::setup() {
+#ifdef MUSICBOX_BEBE
+  // EXT0 wakes on the first edge; require a deliberate 3s hold before starting audio.
+  rtc_gpio_deinit(static_cast<gpio_num_t>(MusicBox::powerPin));
+  pinMode(MusicBox::powerPin, INPUT_PULLUP);
+  if (esp_sleep_get_wakeup_cause() == ESP_SLEEP_WAKEUP_EXT0) {
+    const uint32_t pressed = millis();
+    while (digitalRead(MusicBox::powerPin) == LOW && uint32_t(millis() - pressed) < 3000)
+      delay(10);
+    if (digitalRead(MusicBox::powerPin) != LOW) {
+      esp_sleep_enable_ext0_wakeup(static_cast<gpio_num_t>(MusicBox::powerPin), 0);
+      rtc_gpio_pullup_en(static_cast<gpio_num_t>(MusicBox::powerPin));
+      rtc_gpio_pulldown_dis(static_cast<gpio_num_t>(MusicBox::powerPin));
+      esp_deep_sleep_start();
+    }
+  }
+#endif
   pinMode(shutdownPin  , OUTPUT);
   pin_set_inactive(shutdownPin, shutdownPinType);
 #ifdef POWER_HOLD_READY
@@ -100,11 +119,17 @@ void Tonuino::setup() {
 #endif
 
   settings.init();
-  // RESET flash if all buttons pressed
-  if (buttons.isReset())
-    settings.clearEEPROM();
+  // Child-facing combinations must never erase the portable profile.
+#ifndef MUSICBOX_BEBE
+  if (buttons.isReset()) settings.clearEEPROM();
+#endif
   // load Settings from EEPROM
   settings.loadSettingsFromFlash();
+#ifdef MUSICBOX_BEBE
+  settings.applyMusicBoxLimits();
+  musicbox.begin();
+  btStop(); // Internal Bluetooth is unused, including during administration.
+#endif
 #ifdef STORE_LAST_CARD
   settings.readExtShortCutFromFlash(lastSortCut, myFolder);
   LOG(init_log, s_debug, F("get last, folder: "), myFolder.folder, F(", mode: "), static_cast<uint8_t>(myFolder.mode));
@@ -199,6 +224,16 @@ void Tonuino::setup_adc() {
 void Tonuino::loop() {
 
   unsigned long  start_cycle = millis();
+#ifdef MUSICBOX_BEBE
+  switch (musicbox.readParents()) {
+  case musicbox::ParentAction::toggleLock: musicbox.toggleLock(); break;
+  case musicbox::ParentAction::toggleWifi: webservice.toggleWifi(); break;
+  case musicbox::ParentAction::shutdown: set_shutdown(); break;
+  default: break;
+  }
+  settings.applyMusicBoxLimits();
+  if (mp3.getVolume() > settings.spkMaxVolume) mp3.setVolume(settings.spkMaxVolume);
+#endif
   checkStandby();
 
   if (request_shutdown) {
@@ -306,6 +341,15 @@ void Tonuino::loop() {
 
 #ifdef TonUINO_Esp32
   webservice.loop();
+#endif
+#ifdef MUSICBOX_BEBE
+  musicbox.loop(mp3.isPlaying(), webservice.isEnabled(),
+#ifdef BAT_VOLTAGE_MEASUREMENT
+                batVoltage.isLow()
+#else
+                false
+#endif
+                );
 #endif
 
   unsigned long  stop_cycle = millis();
@@ -513,6 +557,9 @@ void Tonuino::disableStandbyTimer() {
 }
 
 void Tonuino::checkStandby() {
+#ifdef MUSICBOX_BEBE
+  if (webservice.isEnabled()) return; // Finish parental administration before standby.
+#endif
   if (standbyTimer.isActive() && standbyTimer.isExpired()) {
     shutdown();
   }
@@ -520,6 +567,14 @@ void Tonuino::checkStandby() {
 
 void Tonuino::shutdown() {
   LOG(standby_log, s_info, F("power off!"));
+#ifdef MUSICBOX_BEBE
+  musicbox.off();
+  webservice.stopWifi(true);
+  // Keep the protected battery / external latch option; otherwise wake on parent power.
+  esp_sleep_enable_ext0_wakeup(static_cast<gpio_num_t>(MusicBox::powerPin), 0);
+  rtc_gpio_pullup_en(static_cast<gpio_num_t>(MusicBox::powerPin));
+  rtc_gpio_pulldown_dis(static_cast<gpio_num_t>(MusicBox::powerPin));
+#endif
 
 #ifdef ESP32
   webservice.push_shutdown();
@@ -561,6 +616,10 @@ void Tonuino::shutdown() {
   esp_bt_controller_disable();
   esp_bt_controller_deinit();
   esp_wifi_stop();
+#ifdef MUSICBOX_BEBE
+  // EXT0 is level-triggered: sleeping while power is still held would instantly reboot.
+  while (digitalRead(MusicBox::powerPin) == LOW) delay(10);
+#endif
   esp_deep_sleep_start();
 #endif
 }

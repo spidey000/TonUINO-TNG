@@ -38,6 +38,10 @@ void Webserial::begin(AsyncWebServer *server, const String& n_hostname) {
   webserver->addHandler(websocket);
 }
 
+void Webserial::disconnectClients() {
+  if (websocket) websocket->closeAll();
+}
+
 void Webserial::loop() {
   if (websocket)
     websocket->cleanupClients();
@@ -65,7 +69,15 @@ size_t Webserial::write(const uint8_t *buffer, size_t size) {
 String Webserial::process_page(const String& var) {
 
 if (var == "TOPNAV")
-    return topnav_html;
+    {
+      String nav = topnav_html;
+#ifdef MUSICBOX_BEBE
+      nav.replace("<a href=\"/settings\">", "<a href='/musicbox'>MusicBox</a><a href=\"/settings\">");
+#else
+
+#endif
+      return nav;
+    }
 else if (var == "HOSTNAME")
   return hostname;
 

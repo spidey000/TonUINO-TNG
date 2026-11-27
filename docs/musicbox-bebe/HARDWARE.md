@@ -1,46 +1,68 @@
-# Diseño de hardware — primera iteración
+# Hardware del perfil MusicBox_Bebe
 
-## Prioridades
+## Montaje admitido por el firmware
 
-- Manejo comprensible sin leer: una zona NFC grande y botones con iconos en relieve.
-- Offline: pistas en microSD; sin depender de Wi-Fi ni de un móvil para reproducir.
-- Reparabilidad: componentes atornillados y cableados con conectores; no pegar la batería ni la placa.
-- Carcasa compacta, redondeada, sin bordes afilados ni tornillos accesibles desde fuera salvo el cierre de servicio.
+ESP32-WROOM-32 con DFPlayer Mini (audio y microSD propios) y RC522 SPI. No conectar un
+MAX98357A o PN5180 esperando compatibilidad con este perfil. Los GPIO son números del chip.
 
-## Distribución de controles
+| Conexión | GPIO ESP32 | Nota |
+|---|---:|---|
+| Frontal reproducir/pausar | 33 | Pulsador a GND, pull-up interno |
+| Frontal siguiente/volumen + | 25 | Pulsador a GND, pull-up interno |
+| Frontal anterior/volumen − | 26 | Pulsador a GND, pull-up interno |
+| Padres: encendido | 32 | Pulsador a GND, pull-up; RTC/EXT0 para despertar |
+| Padres: bloqueo | 34 | Pulsador a GND; **resistencia externa 10 kΩ a 3,3 V** |
+| LED rojo | 14 | Resistencia individual en serie |
+| LED verde | 21 | Resistencia individual en serie |
+| LED azul | 27 | Resistencia individual en serie |
+| RC522 SDA/SS | 5 | SPI, no I²C |
+| RC522 RST | 22 | Alimentar RC522 a 3,3 V |
+| RC522 SCK/MISO/MOSI | 18/19/23 | SPI estándar WROOM |
+| DFPlayer TX → ESP32 RX | 16 | UART2 |
+| ESP32 TX → DFPlayer RX | 17 | Seguir requisitos de entrada del módulo; resistencia serie si procede |
+| DFPlayer BUSY | 4 | Activo bajo |
+| Medida batería | 35 | Divisor resistivo, nunca celda directa |
+| Salida de apagado | 13 | Activa baja por defecto; opcional circuito de corte compatible |
 
-- Zona NFC amplia en la cara superior, marcada con relieve.
-- Tres botones momentáneos grandes, contrastados y con símbolos en relieve: reproducir/pausar, pista anterior y pista siguiente.
-- Un encoder rotatorio con knob grande, de giro continuo, para ajustar el volumen. El knob debe quedar retenido mecánicamente desde el interior y no poder extraerse a mano.
-- Interruptor principal oculto para adultos, bajo la caja o en la zona de servicio; no debe parecer un control de juego.
-- Limitar el volumen máximo en firmware y evitar saltos bruscos al encender.
-- Rejilla de altavoz integral con huecos que no permitan introducir piezas; altavoz atornillado por dentro.
-- USB de carga en un rebaje. Tapa o acceso solo para adultos.
+GPIO34 es solo entrada y **no tiene pull-up interno**. El GPIO32 permite despertar con el botón
+de padres. Evitar alimentar indicadores o componentes desde GPIO: usar sus fuentes y drivers.
+Las funciones incompatibles con este mapa producen error de compilación al activarlas.
 
-Los botones comerciales de 12 mm de algunos diseños no son suficientemente grandes para el objetivo. La carcasa debe diseñarse para pulsadores momentáneos robustos y fijados desde el interior. TonUINO-TNG incluye soporte opcional para encoder rotatorio (`ROTARY_ENCODER`), cuyo giro se traduce en subir y bajar volumen; ver [`src/rotary_encoder.cpp`](../../src/rotary_encoder.cpp). Mantener el cambio de pista en botones separados para que el knob solo ajuste volumen.
+## LED
 
-## Alimentación
+RGB discreto de cátodo común a GND, un resistor por ánodo. Empezar con 1 kΩ por canal a 3,3 V;
+validar corriente, color y brillo con la pieza elegida. PWM a 1 kHz, tres canales independientes.
+Usar un difusor pequeño retenido desde el interior. No es un WS2812/NeoPixel ni RGB de ánodo común.
 
-Usar una batería 1S Li-ion protegida de fabricante conocido, con cargador y circuito de power-path/load-sharing adecuados para poder cargar mientras el sistema está apagado. La electrónica debe tener protección contra sobrecarga, sobredescarga, sobrecorriente y cortocircuito; añadir fusible si la placa elegida no lo integra. Dimensionar el regulador a partir de la corriente real del amplificador y la placa.
+## Alimentación portátil
 
-No conectar una celda Li-ion directamente a una placa cargadora genérica sin verificar protección, salida y uso simultáneo. No cargar con la caja abierta ni dejarla al alcance durante la carga. En la primera versión, tratar la batería como módulo sellado y reemplazable solo por un adulto.
+Pack 1S Li-ion protegido, objetivo inicial 5000 mAh. Elegir capacidad y dimensiones reales
+antes de cerrar la carcasa. Cargador USB-C con protección y power-path/load-sharing apropiado.
+La carga simultánea depende de este circuito, no la garantiza el software.
 
-## NFC y figuras
+Regulación eficiente para el ESP32/RC522 (3,3 V) y alimentación del DFPlayer dentro de las
+especificaciones del módulo elegido. Dimensionar los picos de audio y evitar conversiones
+innecesarias. La placa de desarrollo puede tener regulador/LED/puente USB que consumen aun dormida;
+medir el conjunto antes de tratarla como diseño final de bajo consumo.
 
-Usar etiquetas compatibles con el lector elegido. Integrar cada etiqueta dentro de una figura grande, de una sola pieza, sin imanes ni partes pequeñas; no usar llaveros, fichas pequeñas ni cordones. Verificar lectura a través del espesor final del plástico y mantener cobre, batería y altavoz alejados de la antena.
+GPIO35 mide la batería mediante divisor: como punto de partida, 100 kΩ/100 kΩ y condensador
+100 nF del nodo ADC a GND. Calibrar `voltMeasCorrection` desde el panel comparando con multímetro.
+El firmware usa el perfil LiPo y no sustituye la protección de la batería.
+GPIO13 puede controlar un circuito externo de corte/enclavamiento compatible. Si no se monta,
+el firmware entra en reposo profundo y despierta con GPIO32. Si se corta la alimentación,
+el botón debe restaurarla por hardware; no basta el GPIO de un ESP32 sin energía.
 
-## Impresión y ensamblaje
+## Caja y tarjetas
 
-- PETG como primera opción para una carcasa más tenaz que PLA; evitar piezas finas o decoraciones desprendibles.
-- Paredes gruesas, radios amplios en esquinas, refuerzos alrededor de pulsadores, knob y altavoz.
-- Tornillos de cierre ocultos y insertos metálicos; el compartimento de batería solo se abre con herramienta.
-- Evitar adhesivos como único medio de retención de batería, altavoz, botones o antena.
-- Probar ajuste y lectura NFC con piezas de prueba antes de imprimir la carcasa completa.
+- Diseño sencillo de imprimir, esquinas redondeadas y montaje atornillado.
+- Ranura para tarjetas NFC encapsuladas en carcasas impresas finas, de tamaño manejable.
+- Lector paralelo a la tarjeta insertada; probar con el plástico y distancia definitivos.
+- Separar antena de batería, altavoz y metal; añadir guías para una inserción repetible.
+- Tres controles infantiles frontales y dos pequeños controles traseros hundidos para padres.
+- El control de volumen queda en pulsación larga de anterior/siguiente; este perfil no usa knob.
+- Altavoz mono de 8 Ω, unos 40–50 mm, elegido por sensibilidad; limitar volumen y medirlo.
+- Batería, conectores, difusor y pulsadores retenidos desde dentro; batería inaccesible sin herramienta.
 
-## Verificaciones antes de uso
-
-1. Comprobar polaridad, corriente de carga, temperatura y tensión de salida sin la niña presente.
-2. Probar que ningún botón, tapa, rejilla o inserto se desprende al tirar o golpear de forma razonable.
-3. Comprobar que la batería no puede extraerse sin herramienta y que no hay cables accesibles.
-4. Probar la caja a volumen limitado y revisar que no se calienta de forma anormal.
-5. Inspeccionar las figuras NFC por grietas o delaminación; retirarlas si se dañan.
+Antes de usar: verificar polaridad, tensiones, corriente de carga, temperatura, retención mecánica,
+lectura de tarjetas, volumen y consumo tanto reproduciendo como apagado. El CAD de la rama es
+un prototipo anterior: adaptar antes de imprimir la caja definitiva.

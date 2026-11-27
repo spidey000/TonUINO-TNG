@@ -115,6 +115,73 @@ void Webservice::init() {
 
   wifi_settings.init();
 
+  webserial.begin(&webserver, wifi_settings.get_hostname());
+
+  ws.onEvent([this](AsyncWebSocket *server, AsyncWebSocketClient *client, AwsEventType type, void *arg, uint8_t *data, size_t len) { onWebSocketEvent(server, client, type, arg, data, len); });
+  webserver.addHandler(&ws);
+
+  webserver.onNotFound(                       [this](AsyncWebServerRequest *request){ page_notfound  (request); });
+
+  webserver.on("/style.css"      , HTTP_GET,  [this](AsyncWebServerRequest *request){ page_style_css (request); });
+
+  webserver.on("/"               , HTTP_GET,  [this](AsyncWebServerRequest *request){ page_main      (request); });
+  webserver.on("/service"        , HTTP_POST, [this](AsyncWebServerRequest *request){ service        (request); });
+  webserver.on("/modifier"       , HTTP_POST, [this](AsyncWebServerRequest *request){ modifier       (request); });
+  webserver.on("/card"           , HTTP_POST, [this](AsyncWebServerRequest *request){ card           (request); });
+
+  webserver.on("/settings"       , HTTP_GET,  [this](AsyncWebServerRequest *request){ page_settings  (request); });
+  webserver.on("/get_settings"   , HTTP_GET,  [this](AsyncWebServerRequest *request){ get_settings   (request); });
+  webserver.on("/update_settings", HTTP_POST, [this](AsyncWebServerRequest *request){ update_settings(request); });
+
+  webserver.on("/system"         , HTTP_GET,  [this](AsyncWebServerRequest *request){ page_system    (request); });
+
+  webserver.on("/wifi"           , HTTP_GET,  [this](AsyncWebServerRequest *request){ page_wifi      (request); });
+  webserver.on("/scan_networks"  , HTTP_GET,  [this](AsyncWebServerRequest *request){ scan_networks  (request); });
+  webserver.on("/wifisave"       , HTTP_POST, [this](AsyncWebServerRequest *request){ wifi_save      (request); });
+
+  webserver.on("/info"           , HTTP_GET,  [this](AsyncWebServerRequest *request){ page_info      (request); });
+
+  webserver.on("/upgrade"        , HTTP_GET,  [this](AsyncWebServerRequest *request){ page_upgrade   (request); });
+  webserver.on("/upgrade"        , HTTP_POST, [this](AsyncWebServerRequest *request){ upgrade_start  (request); },
+                                              [this](AsyncWebServerRequest *request, String filename, size_t index, uint8_t *data, size_t len, bool f)
+                                                                                    { onOtaUpload(request, filename, index, data, len, f); });
+#ifdef MUSICBOX_BEBE
+  webserver.on("/musicbox", HTTP_GET, [this](AsyncWebServerRequest *request) { page_musicbox(request); });
+  webserver.on("/musicbox_settings", HTTP_GET | HTTP_POST,
+               [this](AsyncWebServerRequest *request) { musicbox_settings(request); });
+  WiFi.mode(WIFI_OFF); // No connection attempts, captive portal or persistent AP at boot.
+#else
+  startWifi();
+#endif
+
+}
+
+void Webservice::startWifi() {
+#ifdef MUSICBOX_BEBE
+  if (enabled) return;
+  enabled = true;
+  stopRequested = false;
+  lastActivity.store(millis());
+  connectingSince = millis();
+  connected = false;
+  connecting = wifi_settings.get_ssid().length() != 0;
+  if (connecting) {
+    WiFi.setHostname(wifi_settings.get_hostname().c_str());
+    WiFi.mode(WIFI_STA);
+    if (wifi_settings.get_static_ip()) {
+      IPAddress ip, gw, subnet, dns1, dns2;
+      ip.fromString(wifi_settings.get_static_ip_address());
+      gw.fromString(wifi_settings.get_static_ip_gw());
+      subnet.fromString(wifi_settings.get_static_ip_subnet());
+      dns1.fromString(wifi_settings.get_static_ip_dns1());
+      dns2.fromString(wifi_settings.get_static_ip_dns2());
+      WiFi.config(ip, gw, subnet, dns1, dns2);
+    }
+    WiFi.begin(wifi_settings.get_ssid().c_str(), wifi_settings.get_password().c_str());
+  } else startAccessPoint();
+  webserver.begin();
+  tonuino.getMusicBox().flash(musicbox::Color::blue);
+#else
   const bool force_ap = pin_is_active(buttonUpPin, buttonPinType);
 
   if (not force_ap && (wifi_settings.get_ssid() != "")) {
@@ -160,40 +227,104 @@ void Webservice::init() {
     dns_server.start(53, "*", WiFi.softAPIP());
   }
 
-  webserial.begin(&webserver, wifi_settings.get_hostname());
-
-  ws.onEvent([this](AsyncWebSocket *server, AsyncWebSocketClient *client, AwsEventType type, void *arg, uint8_t *data, size_t len) { onWebSocketEvent(server, client, type, arg, data, len); });
-  webserver.addHandler(&ws);
-
   webserver.begin();
-  webserver.onNotFound(                       [this](AsyncWebServerRequest *request){ page_notfound  (request); });
-
-  webserver.on("/style.css"      , HTTP_GET,  [this](AsyncWebServerRequest *request){ page_style_css (request); });
-
-  webserver.on("/"               , HTTP_GET,  [this](AsyncWebServerRequest *request){ page_main      (request); });
-  webserver.on("/service"        , HTTP_POST, [this](AsyncWebServerRequest *request){ service        (request); });
-  webserver.on("/modifier"       , HTTP_POST, [this](AsyncWebServerRequest *request){ modifier       (request); });
-  webserver.on("/card"           , HTTP_POST, [this](AsyncWebServerRequest *request){ card           (request); });
-
-  webserver.on("/settings"       , HTTP_GET,  [this](AsyncWebServerRequest *request){ page_settings  (request); });
-  webserver.on("/get_settings"   , HTTP_GET,  [this](AsyncWebServerRequest *request){ get_settings   (request); });
-  webserver.on("/update_settings", HTTP_POST, [this](AsyncWebServerRequest *request){ update_settings(request); });
-
-  webserver.on("/system"         , HTTP_GET,  [this](AsyncWebServerRequest *request){ page_system    (request); });
-
-  webserver.on("/wifi"           , HTTP_GET,  [this](AsyncWebServerRequest *request){ page_wifi      (request); });
-  webserver.on("/scan_networks"  , HTTP_GET,  [this](AsyncWebServerRequest *request){ scan_networks  (request); });
-  webserver.on("/wifisave"       , HTTP_POST, [this](AsyncWebServerRequest *request){ wifi_save      (request); });
-
-  webserver.on("/info"           , HTTP_GET,  [this](AsyncWebServerRequest *request){ page_info      (request); });
-
-  webserver.on("/upgrade"        , HTTP_GET,  [this](AsyncWebServerRequest *request){ page_upgrade   (request); });
-  webserver.on("/upgrade"        , HTTP_POST, [this](AsyncWebServerRequest *request){ upgrade_start  (request); },
-                                              [this](AsyncWebServerRequest *request, String filename, size_t index, uint8_t *data, size_t len, bool f)
-                                                                                    { onOtaUpload(request, filename, index, data, len, f); });
+#endif
 }
 
+#ifdef MUSICBOX_BEBE
+void Webservice::startAccessPoint() {
+  connecting = false;
+  connected = false;
+  WiFi.disconnect();
+  WiFi.mode(WIFI_AP);
+  const String password = wifi_settings.get_appassword().length() >= 8
+                        ? wifi_settings.get_appassword() : "musicbox-parent";
+  WiFi.softAP("MusicBox", password.c_str());
+  dns_server.start(53, "*", WiFi.softAPIP());
+}
+
+void Webservice::toggleWifi() {
+  if (enabled) stopWifi();
+  else startWifi();
+}
+
+void Webservice::stopWifi(bool force) {
+  std::lock_guard<std::mutex> guard(uploadMutex);
+  if (!force && uploading) {
+    stopRequested = true;
+    return; // Defer manual OFF as well as timeout until an active upload finishes.
+  }
+  if (uploading) Update.abort();
+  uploading = false;
+  ws.closeAll();
+  webserial.disconnectClients();
+  webserver.end();
+  dns_server.stop();
+  WiFi.disconnect(true, false); // Keep saved credentials.
+  WiFi.mode(WIFI_OFF);
+  enabled = connected = connecting = stopRequested = false;
+  cmd = commandRaw::none;
+}
+
+void Webservice::page_musicbox(AsyncWebServerRequest *request) {
+  touch();
+  request->send(200, "text/html", musicbox_html,
+                [this](const String& var) { return process_page(var); });
+}
+
+void Webservice::musicbox_settings(AsyncWebServerRequest *request) {
+  touch();
+  auto& box = tonuino.getMusicBox();
+  if (request->method() == HTTP_POST) {
+    if (!request->hasArg("brightness") || !request->hasArg("quiet")) {
+      request->send(400, "text/plain", "Faltan brillo y modo silencioso");
+      return;
+    }
+    const String value = request->arg("brightness");
+    bool valid = value.length() > 0 && value.length() <= 2;
+    for (size_t i = 0; i < value.length(); ++i) valid &= isDigit(value[i]);
+    const int brightness = value.toInt();
+    const String quiet = request->arg("quiet");
+    if (!valid || brightness > 32 || (quiet != "0" && quiet != "1")) {
+      request->send(400, "text/plain", "Brillo: 0-32; modo silencioso: 0/1");
+      return;
+    }
+    box.requestLedOptions(brightness, quiet == "1");
+  }
+  JsonDocument doc;
+  doc["brightness"] = box.brightness();
+  doc["quiet"] = box.quietDuringPlayback();
+  doc["locked"] = box.isLocked();
+  doc["wifiTimeoutMinutes"] = 10;
+  String body;
+  serializeJson(doc, body);
+  request->send(200, "application/json", body);
+}
+#endif
+
 void Webservice::loop() {
+#ifdef MUSICBOX_BEBE
+  if (!enabled) return;
+  const uint32_t now = millis();
+  if (connecting) {
+    if (WiFi.status() == WL_CONNECTED) { connected = true; connecting = false; }
+    else if (uint32_t(now - connectingSince) >= 10000) startAccessPoint();
+  }
+  bool busy;
+  {
+    std::lock_guard<std::mutex> guard(uploadMutex);
+    if (uploading && uint32_t(millis() - lastUploadChunk.load()) >= 30000) {
+      Update.abort(); // A disconnected uploader must not keep the radio awake forever.
+      uploading = false;
+    }
+    busy = uploading;
+  }
+  const uint32_t activity = lastActivity.load();
+  if (!busy && (stopRequested || musicbox::wifiExpired(millis(), activity, false))) {
+    stopWifi();
+    return;
+  }
+#endif
   if (ota_reboot) {
     LOG(webserv_log, s_info, "OTA finished, Rebooting ESP32...");
     if (SM_tonuino::is_in_state<Play>())
@@ -215,36 +346,60 @@ commandRaw Webservice::getCommandRaw() {
 }
 
 void Webservice::page_notfound(AsyncWebServerRequest *request) {
+#ifdef MUSICBOX_BEBE
+  touch();
+#endif
   request->send(200, "text/html", notfound_html);
 }
 
 void Webservice::page_style_css(AsyncWebServerRequest *request)
 {
+#ifdef MUSICBOX_BEBE
+  touch();
+#endif
   request->send(200, "text/css", style_css);
 }
 
 void Webservice::page_main(AsyncWebServerRequest *request)
 {
+#ifdef MUSICBOX_BEBE
+  touch();
+#endif
   request->send(200, "text/html", main_html, [this](const String& var) { return process_page(var);});
 }
 
 void Webservice::page_settings(AsyncWebServerRequest *request) {
+#ifdef MUSICBOX_BEBE
+  touch();
+#endif
   request->send(200, "text/html", settings_html, [this](const String& var) { return process_page(var);});
 }
 
 void Webservice::page_system(AsyncWebServerRequest *request) {
+#ifdef MUSICBOX_BEBE
+  touch();
+#endif
   request->send(200, "text/html", system_html, [this](const String& var) { return process_page(var);});
 }
 
 void Webservice::page_wifi(AsyncWebServerRequest *request) {
+#ifdef MUSICBOX_BEBE
+  touch();
+#endif
   request->send(200, "text/html", wifi_html, [this](const String& var) { return process_page(var);});
 }
 
 void Webservice::page_info(AsyncWebServerRequest *request) {
+#ifdef MUSICBOX_BEBE
+  touch();
+#endif
   request->send(200, "text/html", info_html, [this](const String& var) { return process_page(var);});
 }
 
 void Webservice::page_upgrade(AsyncWebServerRequest *request) {
+#ifdef MUSICBOX_BEBE
+  touch();
+#endif
   if (!request->authenticate(ota_user, ota_passwd)) {
     request->requestAuthentication();
     return;
@@ -254,6 +409,9 @@ void Webservice::page_upgrade(AsyncWebServerRequest *request) {
 }
 
 void Webservice::update_settings(AsyncWebServerRequest *request) {
+#ifdef MUSICBOX_BEBE
+  touch();
+#endif
   LOG(webserv_log, s_info, "Webservice::update_settings");
 
   int params = request->params();
@@ -409,6 +567,9 @@ void Webservice::update_settings(AsyncWebServerRequest *request) {
     settings.voltMeasCorrection = voltageMeasurementCorrection;
 #endif
 
+#ifdef MUSICBOX_BEBE
+  settings.applyMusicBoxLimits();
+#endif
   // update real values
   if (mp3.getVolume() > mp3.getMaxVolume()) mp3.setVolume(mp3.getMaxVolume());
   if (mp3.getVolume() < mp3.getMinVolume()) mp3.setVolume(mp3.getMinVolume());
@@ -422,6 +583,9 @@ void Webservice::update_settings(AsyncWebServerRequest *request) {
 }
 
 void Webservice::get_settings(AsyncWebServerRequest *request) {
+#ifdef MUSICBOX_BEBE
+  touch();
+#endif
 
   LOG(webserv_log, s_info, "Webservice::get_settings");
 
@@ -488,6 +652,9 @@ void Webservice::get_settings(AsyncWebServerRequest *request) {
 }
 
 void Webservice::service(AsyncWebServerRequest *request) {
+#ifdef MUSICBOX_BEBE
+  touch();
+#endif
   LOG(webserv_log, s_info, "Webservice::service");
 
   int params = request->params();
@@ -522,6 +689,9 @@ void Webservice::service(AsyncWebServerRequest *request) {
 }
 
 void Webservice::modifier(AsyncWebServerRequest *request) {
+#ifdef MUSICBOX_BEBE
+  touch();
+#endif
   LOG(webserv_log, s_info, "Webservice::modifier");
 
   int params = request->params();
@@ -573,6 +743,9 @@ void Webservice::modifier(AsyncWebServerRequest *request) {
 }
 
 void Webservice::card(AsyncWebServerRequest *request) {
+#ifdef MUSICBOX_BEBE
+  touch();
+#endif
   LOG(webserv_log, s_info, "Webservice::card");
 
   int params = request->params();
@@ -702,6 +875,9 @@ void Webservice::card(AsyncWebServerRequest *request) {
 }
 
 void Webservice::onWebSocketMessage(void *arg, uint8_t *data, size_t len) {
+#ifdef MUSICBOX_BEBE
+  touch();
+#endif
   AwsFrameInfo *info = (AwsFrameInfo*)arg;
   if (info->final && info->index == 0 && info->len == len && info->opcode == WS_TEXT) {
     String text(data, len);
@@ -809,6 +985,9 @@ void Webservice::push_shutdown() {
 }
 
 void Webservice::scan_networks(AsyncWebServerRequest *request) {
+#ifdef MUSICBOX_BEBE
+  touch();
+#endif
 
   LOG(webserv_log, s_info, "Webservice::scan_networks");
 
@@ -869,6 +1048,9 @@ void Webservice::scan_networks(AsyncWebServerRequest *request) {
 }
 
 void Webservice::wifi_save(AsyncWebServerRequest *request) {
+#ifdef MUSICBOX_BEBE
+  touch();
+#endif
   LOG(webserv_log, s_info, "Webservice::wifi_save");
 
   int params = request->params();
@@ -908,6 +1090,9 @@ void Webservice::wifi_save(AsyncWebServerRequest *request) {
 }
 
 void Webservice::upgrade_start(AsyncWebServerRequest *request) {
+#ifdef MUSICBOX_BEBE
+  touch();
+#endif
   LOG(webserv_log, s_info, "Webservice::upgrade_start");
 
   int params = request->params();
@@ -927,6 +1112,11 @@ void Webservice::onOtaUpload(AsyncWebServerRequest *request, String filename, si
     return;
   }
 
+#ifdef MUSICBOX_BEBE
+  std::lock_guard<std::mutex> guard(uploadMutex);
+  touch();
+  lastUploadChunk.store(millis());
+#endif
   if (!index) {
     ota_progress_size = 0;
     if (!Update.begin(UPDATE_SIZE_UNKNOWN, U_FLASH)) {
@@ -934,14 +1124,24 @@ void Webservice::onOtaUpload(AsyncWebServerRequest *request, String filename, si
       StreamString str;
       Update.printError(str);
       LOG(webserv_log, s_error, "Failed to start update process: ", str.c_str());
+#ifdef MUSICBOX_BEBE
+      uploading = false;
+#endif
       request->send(400, "text/plain", String("Failed to start update process: ")+str.c_str());
       return;
     }
   }
 
+#ifdef MUSICBOX_BEBE
+  uploading = true;
+#endif
   if(len){
     if (Update.write(data, len) != len) {
         LOG(webserv_log, s_error, "Failed to write chunked data to free space");
+#ifdef MUSICBOX_BEBE
+        Update.abort();
+        uploading = false;
+#endif
         request->send(400, "text/plain", "Failed to write chunked data to free space");
         return;
     }
@@ -953,11 +1153,15 @@ void Webservice::onOtaUpload(AsyncWebServerRequest *request, String filename, si
   }
 
   if (f) {
+#ifdef MUSICBOX_BEBE
+    uploading = false;
+#endif
     if (!Update.end(true)) {
         StreamString str;
         Update.printError(str);
         LOG(webserv_log, s_error, "Failed to end update process: ", str.c_str());
         request->send(400, "text/plain", "Failed to end update process");
+      return;
     }
     ota_reboot = true;
   }
@@ -968,8 +1172,20 @@ String Webservice::process_page(const String& var) {
 
   if (var == "STATE")
     return get_status();
-  else if (var == "TOPNAV")
-    return topnav_html;
+  else if (var == "TOPNAV") {
+    String nav = topnav_html;
+#ifdef MUSICBOX_BEBE
+    nav.replace("<a href=\"/settings\">", "<a href='/musicbox'>MusicBox</a><a href=\"/settings\">");
+#else
+
+#endif
+    return nav;
+  }
+#ifdef MUSICBOX_BEBE
+  else if (var == "MUSICBOX_NAV") return "<a href='/musicbox'>MusicBox</a>";
+#else
+  else if (var == "MUSICBOX_NAV") return "";
+#endif
   else if (var == "SERVICE") {
 #ifdef FIVEBUTTONS
     if (settings.invertVolumeButtons)

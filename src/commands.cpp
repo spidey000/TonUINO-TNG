@@ -98,6 +98,11 @@ commandRaw Commands::getCommandRaw() {
 
 command Commands::getCommand(commandRaw b, state_for_command s) {
 
+#ifdef MUSICBOX_BEBE
+  // These combinations / long presses otherwise expose admin or shutdown to children.
+  if (b == commandRaw::allLong || b == commandRaw::updownLong || b == commandRaw::pauseLong)
+    b = commandRaw::none;
+#endif
   command ret = command::none;
 #ifdef BUTTONS3X3
   if (b >= commandRaw::ext_begin && b < commandRaw::ext_end)
