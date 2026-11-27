@@ -13,7 +13,7 @@ pio run -e MusicBox_Bebe
 pio run -e MusicBox_Bebe -t upload
 ```
 
-Este perfil usa **ESP32-WROOM-32**, lector **RC522** y **DFPlayer Mini** con microSD.
+Este perfil usa una placa genérica **ESP32-WROOM-32** (`esp32dev`, sin exigir PSRAM), lector **RC522** y **DFPlayer Mini** con microSD.
 No es ESPuino ni usa un MAX98357A/PN5180. Las otras variantes TonUINO mantienen su comportamiento.
 Los GPIO del perfil están documentados en [HARDWARE.md](HARDWARE.md).
 No activar FIVEBUTTONS, encoder, potenciómetro, NeoPixel, botones iluminados o módulo Bluetooth
@@ -81,6 +81,7 @@ Cada destello dura 120 ms y el LED permanece apagado entre avisos.
 Brillo inicial 12/255, límite 32/255; 0 lo apaga. El modo silencioso suprime indicaciones
 mientras suena audio, incluidas las de batería y wifi. Un nuevo evento reemplaza el anterior.
 
+El ESP32 trabaja a 80 MHz: el DFPlayer decodifica el audio y se usa UART hardware.
 Volumen de arranque limitado a 5/30 y techo a 15/30 del DFPlayer, también con ajustes antiguos.
 Son pasos del reproductor, **no decibelios**: medir el sonido del altavoz y carcasa reales.
 Reposo tras 5 minutos de pausa/inactividad por defecto, configurable entre 1 y 15 minutos.
