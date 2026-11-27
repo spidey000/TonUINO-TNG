@@ -1,6 +1,6 @@
 # MusicBox NFC para bebé
 
-Proyecto personal de caja musical offline, imprimible en 3D y modificable con vibe coding. La niña coloca una figura NFC grande sobre la zona marcada y empieza la música. Los controles principales son botones físicos grandes, con funciones simples.
+Proyecto personal de caja musical offline, imprimible en 3D y modificable con vibe coding. La niña coloca una figura NFC grande sobre la zona marcada y empieza la música. Los controles principales son tres botones físicos grandes y un knob rotatorio de volumen, con funciones simples.
 
 ## Base elegida
 
@@ -10,10 +10,11 @@ Proyecto personal de caja musical offline, imprimible en 3D y modificable con vi
 
 ## Interacción prevista
 
-1. Interruptor principal protegido para encender/apagar.
-2. Poner una figura NFC grande en la zona superior: iniciar su álbum/lista.
-3. Botones grandes: reproducir/pausar, anterior, siguiente y volumen.
-4. Retirar la figura puede pausar la música, si la configuración elegida lo permite.
+1. Interruptor principal oculto para adultos, situado en la parte inferior o trasera.
+2. Poner una figura NFC grande en la zona superior para iniciar su álbum o lista.
+3. Tres botones grandes: reproducir/pausar, pista anterior y pista siguiente.
+4. Girar el knob para subir o bajar el volumen. El firmware limitará el volumen máximo.
+5. Retirar la figura puede pausar la música, si la configuración elegida lo permite.
 
 La configuración definitiva de botones y el comportamiento NFC se validarán con el firmware y la electrónica concretos antes de dibujar la carcasa final.
 
