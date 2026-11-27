@@ -10,12 +10,14 @@
 ## Distribución de controles
 
 - Zona NFC amplia en la cara superior, marcada con relieve.
-- Cuatro botones momentáneos de gran diámetro, contrastados y con símbolos distintos: pausa, anterior, siguiente y volumen.
-- Interruptor principal recessed/protegido en un lateral; evitar un mando que pueda desprenderse.
+- Tres botones momentáneos grandes, contrastados y con símbolos en relieve: reproducir/pausar, pista anterior y pista siguiente.
+- Un encoder rotatorio con knob grande, de giro continuo, para ajustar el volumen. El knob debe quedar retenido mecánicamente desde el interior y no poder extraerse a mano.
+- Interruptor principal oculto para adultos, bajo la caja o en la zona de servicio; no debe parecer un control de juego.
+- Limitar el volumen máximo en firmware y evitar saltos bruscos al encender.
 - Rejilla de altavoz integral con huecos que no permitan introducir piezas; altavoz atornillado por dentro.
 - USB de carga en un rebaje. Tapa o acceso solo para adultos.
 
-Los botones comerciales de 12 mm de algunos diseños no son suficientemente grandes para el objetivo. La carcasa debe diseñarse para pulsadores momentáneos robustos y fijados desde el interior; el firmware puede mapearlos a las funciones soportadas.
+Los botones comerciales de 12 mm de algunos diseños no son suficientemente grandes para el objetivo. La carcasa debe diseñarse para pulsadores momentáneos robustos y fijados desde el interior. TonUINO-TNG incluye soporte opcional para encoder rotatorio (`ROTARY_ENCODER`), cuyo giro se traduce en subir y bajar volumen; ver [`src/rotary_encoder.cpp`](../../src/rotary_encoder.cpp). Mantener el cambio de pista en botones separados para que el knob solo ajuste volumen.
 
 ## Alimentación
 
@@ -30,7 +32,7 @@ Usar etiquetas compatibles con el lector elegido. Integrar cada etiqueta dentro 
 ## Impresión y ensamblaje
 
 - PETG como primera opción para una carcasa más tenaz que PLA; evitar piezas finas o decoraciones desprendibles.
-- Paredes gruesas, radios amplios en esquinas, refuerzos alrededor de pulsadores y altavoz.
+- Paredes gruesas, radios amplios en esquinas, refuerzos alrededor de pulsadores, knob y altavoz.
 - Tornillos de cierre ocultos y insertos metálicos; el compartimento de batería solo se abre con herramienta.
 - Evitar adhesivos como único medio de retención de batería, altavoz, botones o antena.
 - Probar ajuste y lectura NFC con piezas de prueba antes de imprimir la carcasa completa.
