@@ -27,7 +27,10 @@ public:
   bool suppressFrontButtons() const { return locked || waitFrontRelease; }
   void releaseFrontButtons() { waitFrontRelease = false; }
   void toggleLock();
-  void flash(musicbox::Color color, uint8_t count = 1) { pulse.flash(millis(), color, count); }
+  void flash(musicbox::Color color, uint8_t count = 1) {
+    pendingColor = color;
+    pendingFlashes = count; // Start timing when the LED can actually be rendered.
+  }
   void off();
   void requestLedOptions(uint8_t brightness, bool quiet) {
     ledOptions.store((quiet ? 256u : 0u) | (brightness > 32 ? 32 : brightness));
@@ -40,6 +43,8 @@ private:
   Preferences prefs;
   musicbox::ParentGesture gestures;
   musicbox::StatusPulse pulse;
+  musicbox::Color pendingColor{musicbox::Color::off};
+  uint8_t pendingFlashes{0};
   std::atomic<bool> locked{false};
   bool waitFrontRelease{false};
   std::atomic<uint16_t> ledOptions{12};

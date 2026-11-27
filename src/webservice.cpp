@@ -268,8 +268,7 @@ void Webservice::stopWifi(bool force) {
 
 void Webservice::page_musicbox(AsyncWebServerRequest *request) {
   touch();
-  request->send(200, "text/html", musicbox_html,
-                [this](const String& var) { return process_page(var); });
+  request->send(200, "text/html", musicbox_html);
 }
 
 void Webservice::musicbox_settings(AsyncWebServerRequest *request) {
@@ -1176,16 +1175,9 @@ String Webservice::process_page(const String& var) {
     String nav = topnav_html;
 #ifdef MUSICBOX_BEBE
     nav.replace("<a href=\"/settings\">", "<a href='/musicbox'>MusicBox</a><a href=\"/settings\">");
-#else
-
 #endif
     return nav;
   }
-#ifdef MUSICBOX_BEBE
-  else if (var == "MUSICBOX_NAV") return "<a href='/musicbox'>MusicBox</a>";
-#else
-  else if (var == "MUSICBOX_NAV") return "";
-#endif
   else if (var == "SERVICE") {
 #ifdef FIVEBUTTONS
     if (settings.invertVolumeButtons)

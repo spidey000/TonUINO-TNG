@@ -44,6 +44,10 @@ void MusicBox::loop(bool playing, bool wifi, bool batteryLow) {
     prefs.putBool("quiet", (options & 256) != 0);
   }
   const uint32_t now = millis();
+  if (pendingFlashes) {
+    pulse.flash(now, pendingColor, pendingFlashes);
+    pendingFlashes = 0;
+  }
   if (!pulse.active(now)) {
     if (batteryLow && uint32_t(now - lastBatteryBlink) >= 30000) {
       lastBatteryBlink = now;

@@ -73,8 +73,6 @@ if (var == "TOPNAV")
       String nav = topnav_html;
 #ifdef MUSICBOX_BEBE
       nav.replace("<a href=\"/settings\">", "<a href='/musicbox'>MusicBox</a><a href=\"/settings\">");
-#else
-
 #endif
       return nav;
     }
