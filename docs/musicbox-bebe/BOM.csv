@@ -4,13 +4,14 @@ NFC,Lector RFID/NFC,MFRC522 (RC522) con antena,1,Base compatible documentada por
 Audio,Reproductor,DFPlayer Mini compatible,1,Usar módulo fiable y comprobar versión de chip
 Audio,Altavoz,Mono 4-8 ohm 3 W,1,Montaje interno atornillado
 Almacenamiento,microSD,16-32 GB FAT32,1,Contenido local
-Controles,Pulsadores momentáneos grandes,Diámetro de cabeza aprox. 25-30 mm; no enclavables,4,Conectar a entradas configuradas de TonUINO
-Controles,Interruptor principal,Deslizante protegido o pulsador de apagado seguro,1,Decidir tras definir la placa de alimentación
+Controles,Pulsadores momentáneos grandes,Diámetro de cabeza aprox. 25-30 mm; no enclavables,3,Play/pause; pista anterior y siguiente
+Controles,Encoder rotatorio con knob,Encoder tipo EC11; mando grande y cautivo,1,Encoder para subir/bajar volumen; limitar volumen máximo por firmware
+Controles,Interruptor principal,Interruptor protegido y oculto para adultos,1,Montar en la parte inferior o zona de servicio
 Energía,Batería,Li-ion 1S protegida de fabricante trazable; capacidad por autonomía objetivo,1,No comprar antes de seleccionar cargador y dimensiones
 Energía,Carga y gestión,Placa de carga 1S con protección y power-path/load-sharing,1,Verificar esquema y salida; no usar TP4056 básico como solución completa
 Energía,Regulación DC-DC,Salida adecuada al ESP32 y DFPlayer con margen de corriente,1,Dimensionar con amplificador a volumen máximo
 Energía,Fusible,Protección en serie con batería si no está integrada,1,Valor según consumo y cableado
 Montaje,Carcasa,Partes impresas PETG con tapa atornillada,1 juego,Diseño propio
 Montaje,Insertos y tornillería,Insertos térmicos M3 y tornillos cautivos,1 juego,Compartimento de batería solo con herramienta
-NFC,Figuras grandes,Figuras monolíticas con NFC encapsulado,5+,Sin piezas pequeñas sueltas ni cordones
+NFC,Figuras grandes,Figuras monolíticas con base circular ancha y etiqueta encapsulada,5+,Un color de filamento por figura y base; sin piezas sueltas
 Cableado,Cables y conectores,JST con polaridad marcada y funda,1 lote,Evitar Dupont sueltos en versión final
