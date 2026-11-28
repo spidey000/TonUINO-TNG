@@ -9,11 +9,17 @@ Controles,Pulsadores para padres,Pequeños hundidos momentáneos,2,Encendido y b
 Controles,Pull-up bloqueo,10 kohm a 3.3 V,1,Obligatorio en GPIO34
 Indicadores,LED RGB,Cátodo común discreto de cuatro patillas,1,Un único indicador frontal con difusor
 Indicadores,Resistencias RGB,1 kohm inicial por canal,3,Validar brillo y corriente con LED real
-Energía,Pack batería,Li-ion 1S protegido objetivo 5000 mAh,1,Validar capacidad dimensiones y autonomía real
-Energía,Cargador USB-C,Protección y power-path/load-sharing adecuado,1,No tratar TP4056 básico como solución completa
+Energía,Pack batería,Li-ion 1S 3.7 V nominal 4.2 V carga unos 20000 mAh con protección eléctrica y térmica autónoma,1,Pack ensamblado de fabricante trazable; BPI candidato con NTC y protecciones por confirmar
+Energía,Cargador conmutado 1S,Familia TI BQ25606 candidata hasta 3 A con power-path NTC y permiso externo,1,No usar la selección MCP73871 anterior; cerrar placa TS temporizador y fuente antes de compra
+Seguridad,NTC de batería,Integrada por fabricante con curva tolerancia y límites documentados,1,Actúa sobre cargador sin ESP32; confirmar detección de circuito abierto y corto
+Seguridad,Sensores digitales adicionales,DS18B20 originales alimentados a 3.3 V con tres hilos,2,Batería y zona de carga; firmware e identificación por ROM pendientes
+Seguridad,Pull-up de bus de sensores,4.7 kohm a 3.3 V como punto de partida,1,Validar con longitud y capacidad del cableado; GPIO sin asignar hasta cerrar esquema
+Seguridad,Protección térmica independiente,Corte de carga y descarga autónomo del pack y barrera de temperatura de carga,1 juego,Verificar ventana del pack; JEITA nominal del BQ25606 no garantiza 0 a 45 C
+Seguridad,Fusible DC y portafusible,No rearmable cerca del pack dimensionado con corriente de carga y cableado,1,Referencia y curva pendientes del circuito final
+Seguridad,Fuente y entrada de carga,USB-C 5 V con corriente documentada y limitación de entrada,1,No asumir 3 A por llevar USB-C; validar cable y reconocimiento de fuente
 Energía,Regulación,Salidas adecuadas a ESP32 RC522 y DFPlayer con bajo consumo en reposo,1 juego,Dimensionar picos de audio y medir conjunto
 Energía,Medición batería,Divisor 100k/100k más condensador 100nF,1 juego,Calibrar ADC GPIO35; nunca conectar celda directa
-Energía,Circuito de corte,Enclavamiento opcional con encendido físico,1 opcional,Si se omite usar reposo profundo y despertar GPIO32
+Energía,Circuito de corte,Enclavamiento con encendido físico y ruta autónoma de protección de carga,1,Obligatorio en diseño objetivo 20 Ah; adaptación y validación del circuito pendientes
 Montaje,Carcasa y difusor,Impresión sencilla con ranura y cierre atornillado,1 juego,Adaptar CAD a módulos reales
 NFC,Tarjetas y carcasas,NTAG213 compatibles encapsuladas en carcasas impresas finas,5+,Validar lectura con espesor definitivo
 Montaje,Cableado conectores y tornillos,Con polaridad marcada y fijación interior,1 lote,Sin conexiones sueltas

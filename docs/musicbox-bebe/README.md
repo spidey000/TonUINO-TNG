@@ -16,6 +16,10 @@ pio run -e MusicBox_Bebe -t upload
 Este perfil usa una placa genérica **ESP32-WROOM-32** (`esp32dev`, sin exigir PSRAM), lector **RC522** y **DFPlayer Mini** con microSD.
 No es ESPuino ni usa un MAX98357A/PN5180. Las otras variantes TonUINO mantienen su comportamiento.
 Los GPIO del perfil están documentados en [HARDWARE.md](HARDWARE.md).
+El diseño de alimentación actual pasa a un pack protegido de unos **20 Ah**, con protección
+térmica autónoma y sensores adicionales. Ver [especificación y estado real](SAFETY_20AH.md).
+El perfil que se compila aquí todavía no implementa la supervisión térmica: el cambio actual
+es de especificación de hardware y BOM, y requiere seleccionar y ensayar el circuito final.
 No activar FIVEBUTTONS, encoder, potenciómetro, NeoPixel, botones iluminados o módulo Bluetooth
 junto a este perfil: comparten pines con los controles propios.
 

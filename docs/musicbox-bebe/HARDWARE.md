@@ -36,9 +36,17 @@ Usar un difusor pequeño retenido desde el interior. No es un WS2812/NeoPixel ni
 
 ## Alimentación portátil
 
-Pack 1S Li-ion protegido, objetivo inicial 5000 mAh. Elegir capacidad y dimensiones reales
-antes de cerrar la carcasa. Cargador USB-C con protección y power-path/load-sharing apropiado.
-La carga simultánea depende de este circuito, no la garantiza el software.
+El objetivo actual es un **pack 1S protegido de unos 20.000 mAh**, con NTC y protección
+térmica autónoma. Sustituye el objetivo inicial de 5.000 mAh. La selección y los requisitos
+están en [Alimentación de 20 Ah y protección térmica](SAFETY_20AH.md).
+El cargador MCP73871 genérico de la lista inicial deja de ser la selección para esta revisión.
+La familia BQ25606 es candidata; aún hay que cerrar pack, placa, red térmica, temporizador,
+fuente y fusible. No deducir seguridad de la capacidad ni de un nombre de chip.
+
+**El firmware actual no mide temperatura ni controla el permiso de carga.** La supervisión
+adicional con dos sensores y sus acciones está especificada y pendiente de implementación.
+Los cortes primarios deben funcionar por hardware con ESP32 apagado o bloqueado.
+No habilitar reproducción durante carga hasta verificar el circuito final.
 
 Regulación eficiente para el ESP32/RC522 (3,3 V) y alimentación del DFPlayer dentro de las
 especificaciones del módulo elegido. Dimensionar los picos de audio y evitar conversiones
@@ -48,9 +56,11 @@ medir el conjunto antes de tratarla como diseño final de bajo consumo.
 GPIO35 mide la batería mediante divisor: como punto de partida, 100 kΩ/100 kΩ y condensador
 100 nF del nodo ADC a GND. Calibrar `voltMeasCorrection` desde el panel comparando con multímetro.
 El firmware usa el perfil LiPo y no sustituye la protección de la batería.
-GPIO13 puede controlar un circuito externo de corte/enclavamiento compatible. Si no se monta,
-el firmware entra en reposo profundo y despierta con GPIO32. Si se corta la alimentación,
-el botón debe restaurarla por hardware; no basta el GPIO de un ESP32 sin energía.
+GPIO13 puede controlar un circuito externo de corte/enclavamiento compatible. El perfil
+actual permite omitirlo y entrar en reposo profundo con despertar por GPIO32; el diseño
+objetivo de 20 Ah requiere añadir y verificar ese corte, manteniendo la ruta de carga protegida.
+Si se corta la alimentación, el botón debe restaurarla por hardware; no basta el GPIO de
+un ESP32 sin energía.
 
 ## Caja y tarjetas
 
