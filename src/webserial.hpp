@@ -15,6 +15,7 @@ public:
   void begin(AsyncWebServer *server, const String& hostname);
 
   void loop();
+  void disconnectClients();
 
   // Print interface
   virtual size_t write(uint8_t) override;

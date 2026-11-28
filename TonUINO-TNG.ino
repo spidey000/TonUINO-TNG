@@ -27,7 +27,7 @@ Bitte wählt eure TonUINO-Platine (Classic, AiO oder AiO+) in der Datei constant
 void setup()
 {
   Serial.begin(115200);
-#ifdef TonUINO_Esp32
+#if defined(TonUINO_Esp32) && !defined(MUSICBOX_BEBE)
   if (pin_is_active(buttonDownPin, buttonPinType))
     delay(5000);
 #endif

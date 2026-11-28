@@ -6,6 +6,8 @@
 #include <DNSServer.h>
 #include <ESPAsyncWebServer.h>
 #include <Preferences.h>
+#include <atomic>
+#include <mutex>
 
 #include "settings.hpp"
 #include "commands.hpp"
@@ -61,12 +63,29 @@ public:
 
   void init();
   void loop();
+#ifdef MUSICBOX_BEBE
+  void toggleWifi();
+  void stopWifi(bool force = false);
+  bool isEnabled() const { return enabled; }
+#endif
 
   void push_shutdown  ();
 
   commandRaw getCommandRaw() override;
 
 private:
+  void startWifi();
+#ifdef MUSICBOX_BEBE
+  void startAccessPoint();
+  void touch() { lastActivity.store(millis()); }
+  void page_musicbox(AsyncWebServerRequest *request);
+  void musicbox_settings(AsyncWebServerRequest *request);
+  bool enabled{false}, connecting{false}, stopRequested{false};
+  uint32_t connectingSince{0};
+  std::atomic<uint32_t> lastActivity{0}, lastUploadChunk{0};
+  std::mutex uploadMutex;
+  bool uploading{false}; // protected by uploadMutex
+#endif
   void page_notfound  (AsyncWebServerRequest *request);
   void page_style_css (AsyncWebServerRequest *request);
 

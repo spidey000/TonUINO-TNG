@@ -22,6 +22,9 @@ struct Settings {
 
   void writeSettingsToFlash();
   void resetSettings();
+#ifdef MUSICBOX_BEBE
+  void applyMusicBoxLimits();
+#endif
   void loadSettingsFromFlash();
 
   void    writeFolderSettingToFlash (uint8_t folder, uint8_t track);

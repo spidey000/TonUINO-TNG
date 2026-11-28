@@ -12,6 +12,7 @@
 #include "modifier.hpp"
 #include "timer.hpp"
 #include "batVoltage.hpp"
+#include "musicbox.hpp"
 #ifdef NEO_RING
 #include "ring.hpp"
 #endif
@@ -85,6 +86,10 @@ public:
   uint16_t getBatVoltageFromInput() const { return serialInput.getBatVoltageFromInput(); }
 #endif
 
+#ifdef MUSICBOX_BEBE
+  MusicBox& getMusicBox() { return musicbox; }
+  Webservice& getWebservice() { return webservice; }
+#endif
   void shutdown();
 
   uint16_t getNumTracksInFolder() const {return numTracksInFolder; }
@@ -111,6 +116,9 @@ private:
 
   void checkStandby();
 
+#ifdef MUSICBOX_BEBE
+  MusicBox             musicbox;
+#endif
   Settings             settings            {};
   Mp3                  mp3                 {settings};
   Buttons              buttons             {};

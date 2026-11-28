@@ -533,9 +533,18 @@ void WriteCard::react(command_e const &cmd_e) {
 bool Base::readCard() {
   lastCardRead.mode = pmode_t::none;
   switch(chip_card.readCard(lastCardRead)) {
-  case Chip_card::readCardEvent::none : return false;
+  case Chip_card::readCardEvent::none :
+#ifdef MUSICBOX_BEBE
+    tonuino.getMusicBox().flash(musicbox::Color::red, 2);
+#endif
+    return false;
 
   case Chip_card::readCardEvent::known:
+#ifdef MUSICBOX_BEBE
+    tonuino.getMusicBox().flash(musicbox::Color::green);
+    // Programming and modifier cards are parental actions; ordinary cards still work locked.
+    if (lastCardRead.folder == 0 && !tonuino.getWebservice().isEnabled()) return false;
+#endif
 #ifdef BT_MODULE
     if (lastCardRead.mode == pmode_t::switch_bt) {
       tonuino.switchBtModuleOnOff();
@@ -556,6 +565,10 @@ bool Base::readCard() {
     break;
 
   case Chip_card::readCardEvent::empty:
+#ifdef MUSICBOX_BEBE
+    tonuino.getMusicBox().flash(musicbox::Color::red, 2);
+    if (!tonuino.getWebservice().isEnabled()) return false;
+#endif
     LOG(state_log, s_debug, str_Base(), str_to(), str_Admin_NewCard());
     Admin_NewCard::return_to_idle = true;
     mp3.enqueueMp3FolderTrack(mp3Tracks::t_300_new_tag);

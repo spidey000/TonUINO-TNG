@@ -1,17 +1,25 @@
-Categoría,Componente,Especificación inicial,Cantidad,Estado/nota
-Control,Placa microcontrolador,Placa compatible con TonUINO-TNG; comparar ESP32-WROOM-32 y Nano Every antes de compra,1,No cerrar elección todavía: el README actual del firmware menciona inestabilidad del encoder rotatorio en ESP32 (Issue 324)
-NFC,Lector RFID/NFC,MFRC522 (RC522) con antena,1,Base compatible documentada por TonUINO; verificar tags elegidos
-Audio,Reproductor,DFPlayer Mini compatible,1,Usar módulo fiable y comprobar versión de chip
-Audio,Altavoz,Mono 4-8 ohm 3 W,1,Montaje interno atornillado
-Almacenamiento,microSD,16-32 GB FAT32,1,Contenido local
-Controles,Pulsadores momentáneos grandes,Diámetro de cabeza aprox. 25-30 mm; no enclavables,3,Play/pause; pista anterior y siguiente
-Controles,Control de volumen,Encoder rotatorio tipo EC11 con knob grande y cautivo; valorar potenciómetro si la placa elegida lo integra mejor,1,Comprobar compatibilidad y respuesta con la variante TonUINO elegida antes de fijar el panel
-Controles,Interruptor principal,Interruptor protegido y oculto para adultos,1,Montar en la parte inferior o zona de servicio
-Energía,Batería,Li-ion 1S protegida de fabricante trazable; capacidad por autonomía objetivo,1,No comprar antes de seleccionar cargador y dimensiones
-Energía,Carga y gestión,Placa de carga 1S con protección y power-path/load-sharing,1,Verificar esquema y salida; no usar TP4056 básico como solución completa
-Energía,Regulación DC-DC,Salida adecuada al ESP32 y DFPlayer con margen de corriente,1,Dimensionar con amplificador a volumen máximo
-Energía,Fusible,Protección en serie con batería si no está integrada,1,Valor según consumo y cableado
-Montaje,Carcasa,Partes impresas PETG con tapa atornillada,1 juego,Diseño propio
-Montaje,Insertos y tornillería,Insertos térmicos M3 y tornillos cautivos,1 juego,Compartimento de batería solo con herramienta
-NFC,Figuras grandes,Figuras monolíticas con base circular ancha y etiqueta encapsulada,5+,Un color de filamento por figura y base; sin piezas sueltas
-Cableado,Cables y conectores,JST con polaridad marcada y funda,1 lote,Evitar Dupont sueltos en versión final
+Categoría,Componente,Especificación,Cantidad,Nota
+Control,ESP32-WROOM-32,Compatible con perfil MusicBox_Bebe y mapa GPIO documentado,1,Para diseño final elegir placa con regulador de bajo consumo sin LED permanente
+NFC,Lector RC522,SPI 3.3 V,1,No PN5180 para este firmware
+Audio,DFPlayer Mini,UART y microSD propios,1,No MAX98357A; verificar chip del módulo y consumo
+Audio,Altavoz,Mono 8 ohm 40-50 mm y volumen moderado,1,Seleccionar sensibilidad y validar nivel acústico en caja
+Almacenamiento,microSD,16-32 GB FAT32,1,Se copia audio desde ordenador; sin carga de audio por wifi
+Controles,Pulsadores infantiles,Grandes momentáneos y retenidos por dentro,3,Pausa anterior siguiente; volumen mediante pulsación larga
+Controles,Pulsadores para padres,Pequeños hundidos momentáneos,2,Encendido y bloqueo; ambos activan wifi
+Controles,Pull-up bloqueo,10 kohm a 3.3 V,1,Obligatorio en GPIO34
+Indicadores,LED RGB,Cátodo común discreto de cuatro patillas,1,Un único indicador frontal con difusor
+Indicadores,Resistencias RGB,1 kohm inicial por canal,3,Validar brillo y corriente con LED real
+Energía,Pack batería,Li-ion 1S 3.7 V nominal 4.2 V carga unos 20000 mAh con protección eléctrica y térmica autónoma,1,Pack ensamblado de fabricante trazable; BPI candidato con NTC y protecciones por confirmar
+Energía,Cargador conmutado 1S,Familia TI BQ25606 candidata hasta 3 A con power-path NTC y permiso externo,1,No usar la selección MCP73871 anterior; cerrar placa TS temporizador y fuente antes de compra
+Seguridad,NTC de batería,Integrada por fabricante con curva tolerancia y límites documentados,1,Actúa sobre cargador sin ESP32; confirmar detección de circuito abierto y corto
+Seguridad,Sensores digitales adicionales,DS18B20 originales alimentados a 3.3 V con tres hilos,2,Batería y zona de carga; firmware e identificación por ROM pendientes
+Seguridad,Pull-up de bus de sensores,4.7 kohm a 3.3 V como punto de partida,1,Validar con longitud y capacidad del cableado; GPIO sin asignar hasta cerrar esquema
+Seguridad,Protección térmica independiente,Corte de carga y descarga autónomo del pack y barrera de temperatura de carga,1 juego,Verificar ventana del pack; JEITA nominal del BQ25606 no garantiza 0 a 45 C
+Seguridad,Fusible DC y portafusible,No rearmable cerca del pack dimensionado con corriente de carga y cableado,1,Referencia y curva pendientes del circuito final
+Seguridad,Fuente y entrada de carga,USB-C 5 V con corriente documentada y limitación de entrada,1,No asumir 3 A por llevar USB-C; validar cable y reconocimiento de fuente
+Energía,Regulación,Salidas adecuadas a ESP32 RC522 y DFPlayer con bajo consumo en reposo,1 juego,Dimensionar picos de audio y medir conjunto
+Energía,Medición batería,Divisor 100k/100k más condensador 100nF,1 juego,Calibrar ADC GPIO35; nunca conectar celda directa
+Energía,Circuito de corte,Enclavamiento con encendido físico y ruta autónoma de protección de carga,1,Obligatorio en diseño objetivo 20 Ah; adaptación y validación del circuito pendientes
+Montaje,Carcasa y difusor,Impresión sencilla con ranura y cierre atornillado,1 juego,Adaptar CAD a módulos reales
+NFC,Tarjetas y carcasas,NTAG213 compatibles encapsuladas en carcasas impresas finas,5+,Validar lectura con espesor definitivo
+Montaje,Cableado conectores y tornillos,Con polaridad marcada y fijación interior,1 lote,Sin conexiones sueltas

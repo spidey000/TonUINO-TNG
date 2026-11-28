@@ -47,6 +47,18 @@ void Settings::commit() {
 #endif
 }
 
+#ifdef MUSICBOX_BEBE
+void Settings::applyMusicBoxLimits() {
+  // DFPlayer steps are not dB: validate the actual speaker level on the prototype.
+  spkMaxVolume = min(spkMaxVolume, uint8_t(15));
+  spkMinVolume = min(spkMinVolume, min(spkMaxVolume, uint8_t(5)));
+  spkInitVolume = min(spkInitVolume, min(spkMaxVolume, uint8_t(5)));
+  spkInitVolume = max(spkInitVolume, spkMinVolume);
+  if (standbyTimer == 0 || standbyTimer > 15) standbyTimer = 5;
+  invertVolumeButtons = 0; // short = track, hold = volume
+}
+#endif
+
 void Settings::clearEEPROM() {
   LOG(settings_log, s_info, F("clEEPROM"));
   for (uint16_t i = startAddressFolderSettings; i < endAddress; ++i) {
@@ -71,6 +83,12 @@ void Settings::resetSettings() {
   eq                   =  1;
   dummy                =  0;
   standbyTimer         =  0;
+#ifdef MUSICBOX_BEBE
+  spkMaxVolume = 15;
+  spkMinVolume = 1;
+  spkInitVolume = 5;
+  standbyTimer = 5;
+#endif
 #ifdef FIVEBUTTONS
   invertVolumeButtons  =  0;
 #else

@@ -391,6 +391,10 @@ bool Mp3::setVolume() {
 }
 
 void Mp3::setVolume(uint8_t v) {
+#ifdef MUSICBOX_BEBE
+  v = min(v, uint8_t(15));
+  v = min(v, *maxVolume);
+#endif
   *volume = v;
   LOG(mp3_log, s_debug, F("setVolume: "), *volume);
   Base::setVolume(*volume);

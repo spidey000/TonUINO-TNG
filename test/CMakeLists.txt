@@ -14,7 +14,7 @@ function(build_and_run_tests config_name)
 	
 	add_executable(test_${config_name} ${test_tonuino_sources})
 	target_compile_definitions(test_${config_name} PRIVATE ${ARGN})
-	target_link_libraries(test_${config_name} lib_${config_name} gtest gtest_main)
+	target_link_libraries(test_${config_name} lib_${config_name} GTest::gtest GTest::gtest_main)
 	gtest_discover_tests(test_${config_name} TEST_PREFIX ${config_name}:)
 endfunction()
 
